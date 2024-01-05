@@ -1,0 +1,24 @@
+title: Detect Scheduled Task Tampering in Registry
+id: unique-rule-id
+status: experimental
+description: >
+    Detects tampering with scheduled tasks by monitoring modifications to specific registry paths associated with scheduled tasks. This rule targets on Windows Event ID's 4657 and 4663 which are generated during registry key modifications.
+level: high
+logsource:
+    category: windows
+    product: windows
+    service: security
+detection:
+    selection1:
+        EventID:
+          - 4657  
+    selection2:
+        EventID:
+          - 4663  
+    condition: selection1 OR selection2
+falsepositives:
+    - Legitimate scheduled task modifications
+    - System or software updates
+tags:
+    - attack.persistence
+    - attack.t1053  # Scheduled Task/Job
