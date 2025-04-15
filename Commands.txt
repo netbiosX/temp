@@ -1,0 +1,8 @@
+# Define remote computer and credentials
+$remoteComputer = "RemoteHostNameOrIP"
+$username = "DOMAIN\Username"  # or just "Username" for local accounts
+$password = ConvertTo-SecureString "YourPassword" -AsPlainText -Force
+$cred = New-Object System.Management.Automation.PSCredential ($username, $password)
+
+# Query WMI class Win32_OperatingSystem on remote machine
+Get-WmiObject -Class Win32_OperatingSystem -ComputerName $remoteComputer -Credential $cred
