@@ -1,0 +1,99 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "AtomicPurpleTeam/1.0.0": {
+        "dependencies": {
+          "Microsoft.PowerShell.5.ReferenceAssemblies": "1.1.0",
+          "Newtonsoft.Json": "13.0.3",
+          "System.Security.Permissions": "9.0.5"
+        },
+        "runtime": {
+          "AtomicPurpleTeam.dll": {}
+        }
+      },
+      "Microsoft.PowerShell.5.ReferenceAssemblies/1.1.0": {
+        "runtime": {
+          "lib/net4/System.Management.Automation.dll": {
+            "assemblyVersion": "3.0.0.0",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "Newtonsoft.Json/13.0.3": {
+        "runtime": {
+          "lib/net6.0/Newtonsoft.Json.dll": {
+            "assemblyVersion": "13.0.0.0",
+            "fileVersion": "13.0.3.27908"
+          }
+        }
+      },
+      "System.Security.Permissions/9.0.5": {
+        "dependencies": {
+          "System.Windows.Extensions": "9.0.5"
+        },
+        "runtime": {
+          "lib/net8.0/System.Security.Permissions.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.525.21509"
+          }
+        }
+      },
+      "System.Windows.Extensions/9.0.5": {
+        "runtime": {
+          "lib/net8.0/System.Windows.Extensions.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.525.21509"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net8.0/System.Windows.Extensions.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.525.21509"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "AtomicPurpleTeam/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.PowerShell.5.ReferenceAssemblies/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-EE87t3aUXlO0Rjq83Ti8z1g4wwsWnB4W+pOn84i3QWzUOOuP5gZg8n4Y8XTZ7GkxGcoSR6w/d/kBJTJbc3VZPQ==",
+      "path": "microsoft.powershell.5.referenceassemblies/1.1.0",
+      "hashPath": "microsoft.powershell.5.referenceassemblies.1.1.0.nupkg.sha512"
+    },
+    "Newtonsoft.Json/13.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ==",
+      "path": "newtonsoft.json/13.0.3",
+      "hashPath": "newtonsoft.json.13.0.3.nupkg.sha512"
+    },
+    "System.Security.Permissions/9.0.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8yMr2v0W2/XdDpFdVkffrSRNxzjD67meUYCQLdBgZOBmMWo2xlgAWuX4OX6r40pnA4/+LaXrlFAKUlOQs289lg==",
+      "path": "system.security.permissions/9.0.5",
+      "hashPath": "system.security.permissions.9.0.5.nupkg.sha512"
+    },
+    "System.Windows.Extensions/9.0.5": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-zY91ORvF6opIT4QHp4Xi7x7lpg0ZVi0x2JoNYnjHx63UrhAYrUSQzQbpJPdkMS6gqRnFDKx3ojF1QVlKeucWAg==",
+      "path": "system.windows.extensions/9.0.5",
+      "hashPath": "system.windows.extensions.9.0.5.nupkg.sha512"
+    }
+  }
+}
