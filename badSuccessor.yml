@@ -1,0 +1,42 @@
+title: Suspicious dMSA Creation, Linking, and Authentication BadSuccessor Attack
+id: 8f5c2e1d-3a2b-4c6f-b7d9-0e2f6a9b1c3e
+status: stable
+description: Detects the three core stages of a BadSuccessor exploit in Windows Server 2025  
+  1. Creation of a delegated Managed Service Account (dMSA),  
+  2. Linking that dMSA to a privileged account via attribute modification,  
+  3. Authentication with a KERB-DMSA-KEY-PACKAGE (Event ID 2946).  
+author: Panos (via ChatGPT)
+date: 2025/06/22
+modified: 2025/06/23
+references:
+  - title: BadSuccessor Abusing dMSA for Privilege Escalation in Active Directory
+    url: https://www.akamai.com/blog/security-research/abusing-dmsa-for-privilege-escalation-in-active-directory
+  - title: BadSuccessor Abusing dMSA to Escalate Privileges in Active Directory (Netizen)
+    url: https://www.netizen.net/news/post/6372/badsuccessor-abusing-dmsa-to-escalate-privileges-in-active-directory
+tags:
+  - attack.persistence
+  - attack.privilege_escalation
+  - attack.T1136.003            # Service Account Creation
+  - attack.T1556.004            # Forge Kerberos Ticket (impersonation)
+logsource:
+  product: windows
+detection:
+  selection_dmsa_creation:
+    EventID: 5137
+    ObjectClass: "msDS-DelegatedManagedServiceAccount"    # creation of dMSA :contentReference[oaicite:0]{index=0}
+  selection_attribute_modification:
+    EventID: 5136
+    ObjectClass: "msDS-ManagedServiceAccount"
+    ChangedAttributes|contains|all:
+      - "msDS-ManagedAccountPrecededByLink"
+      - "msDS-DelegatedMSAState"                         # linking dMSA to privileged account :contentReference[oaicite:1]{index=1}
+  selection_dmsa_authentication:
+    EventID: 2946
+    LogName: "Directory Service"
+    CallerSid: "S-1-5-7"                                # KERB-DMSA-KEY-PACKAGE authentication :contentReference[oaicite:2]{index=2}
+    # Alert only when all three selections occur within a short time window
+  condition: selection_dmsa_creation and selection_attribute_modification and selection_dmsa_authentication
+falsepositives:
+  - Legitimate dMSA provisioning and lifecycle activities by authorized administrators
+  - Expected service-ticket renewals for production dMSAs
+level: high
