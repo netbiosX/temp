@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 import { Clock, CheckCircle, XCircle, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -65,7 +61,7 @@ export default function App() {
 
   // Safe question access
   const currentQuestion = questions[currentIndex] || { question: '', options: [], answer: '' };
-  const percentElapsed = ((EXAM_DURATION - timeLeft) / EXAM_DURATION) * 100;
+  const percentElapsed = Math.min(100, ((EXAM_DURATION - timeLeft) / EXAM_DURATION) * 100);
 
   const handleSelect = option => setSelected(option);
 
@@ -81,7 +77,6 @@ export default function App() {
   const formatTime = secs =>
     `${String(Math.floor(secs / 60)).padStart(2, '0')}:${String(secs % 60).padStart(2, '0')}`;
 
-  // Generate and download PDF, also store metadata in localStorage
   const exportResults = () => {
     const percent = ((score / questions.length) * 100).toFixed(2);
     const passed = percent >= PASS_MARK * 100;
@@ -108,20 +103,32 @@ export default function App() {
       <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6"
         >
-          <Card>
-            <CardHeader className="text-center">
-              <h1 className="text-2xl font-bold text-indigo-900">Welcome to the Purple Team Exam</h1>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Input label="Student Name" placeholder="Enter your name" value={studentName} onChange={e => setStudentName(e.target.value)} />
-              <Input label="Student ID" placeholder="Enter your ID" value={studentID} onChange={e => setStudentID(e.target.value)} />
-              <Button onClick={handleStart} disabled={!studentName.trim() || !studentID.trim()} className="w-full mt-2">
-                Start Exam
-              </Button>
-            </CardContent>
-          </Card>
+          <h1 className="text-2xl font-bold text-indigo-900 text-center mb-4">Welcome to the Purple Team Exam</h1>
+          <label className="block text-sm font-medium text-indigo-800 mb-1">Student Name</label>
+          <input
+            type="text"
+            placeholder="Enter your name"
+            value={studentName}
+            onChange={e => setStudentName(e.target.value)}
+            className="w-full px-4 py-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          <label className="block text-sm font-medium text-indigo-800 mb-1">Student ID</label>
+          <input
+            type="text"
+            placeholder="Enter your ID"
+            value={studentID}
+            onChange={e => setStudentID(e.target.value)}
+            className="w-full px-4 py-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          <button
+            onClick={handleStart}
+            disabled={!studentName.trim() || !studentID.trim()}
+            className="w-full py-2 mt-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+          >
+            Start Exam
+          </button>
         </motion.div>
       </div>
     );
@@ -129,26 +136,25 @@ export default function App() {
 
   // Results screen
   if (showResults) {
-    const percent = (score / questions.length) * 100;
+    const percent = ((score / questions.length) * 100).toFixed(2);
     const passed = percent >= PASS_MARK * 100;
     return (
       <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4 }} className="w-full max-w-md">
-          <Card>
-            <CardHeader className="text-center">
-              <h2 className="text-2xl font-bold">Exam Results</h2>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              <p>Name: <strong>{studentName}</strong></p>
-              <p>ID: <strong>{studentID}</strong></p>
-              {passed ? <CheckCircle className="mx-auto w-12 h-12 text-green-500"/> : <XCircle className="mx-auto w-12 h-12 text-red-500"/>}
-              <p>Your Score: {percent.toFixed(2)}%</p>
-              <p>Required: {(PASS_MARK*100).toFixed(0)}%</p>
-              <Button onClick={exportResults} className="mt-4 inline-flex items-center">
-                <Download className="mr-2"/> Export PDF & Save
-              </Button>
-            </CardContent>
-          </Card>
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.4 }} className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Exam Results</h2>
+            <p className="text-indigo-700">Name: <strong>{studentName}</strong></p>
+            <p className="text-indigo-700 mb-4">ID: <strong>{studentID}</strong></p>
+            {passed ? <CheckCircle className="mx-auto w-12 h-12 text-green-500 mb-4"/> : <XCircle className="mx-auto w-12 h-12 text-red-500 mb-4"/>}
+            <p className="text-lg mb-2">Your Score: <span className="font-mono">{percent}%</span></p>
+            <p className="text-sm text-gray-600 mb-6">Required: {(PASS_MARK*100).toFixed(0)}%</p>
+            <button
+              onClick={exportResults}
+              className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            >
+              <Download className="mr-2"/> Export PDF & Save
+            </button>
+          </div>
         </motion.div>
       </div>
     );
@@ -157,36 +163,42 @@ export default function App() {
   // Exam screen
   return (
     <div className="min-h-screen bg-purple-50 flex items-center justify-center p-4">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-xl">
-        <Card className="mb-6">
-          <CardHeader className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-indigo-900">Purple Team Exam</h1>
-              <p className="text-sm text-indigo-700">Candidate: {studentName} (ID: {studentID})</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Clock className="w-5 h-5 text-indigo-600" />
-              <span className="font-mono">{formatTime(timeLeft)}</span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Progress value={percentElapsed} className="mb-4" />
-            <h2 className="text-lg font-medium text-indigo-800 mb-2">Question {currentIndex+1} of {questions.length}</h2>
-            <p className="mb-4 text-indigo-700">{currentQuestion.question}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              {currentQuestion.options.map(opt => (
-                <Button key={opt} variant={selected===opt?'default':'outline'} onClick={()=>handleSelect(opt)} className="text-left">
-                  {opt}
-                </Button>
-              ))}
-            </div>
-            <div className="text-right">
-              <Button onClick={handleNext} disabled={!selected} className="px-6">
-                {currentIndex+1===questions.length?'Submit':'Next'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-xl bg-white rounded-2xl shadow-lg p-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-indigo-900">Purple Team Exam</h1>
+            <p className="text-sm text-indigo-700">Candidate: {studentName} (ID: {studentID})</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Clock className="w-5 h-5 text-indigo-600" />
+            <span className="font-mono">{formatTime(timeLeft)}</span>
+          </div>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+          <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${percentElapsed}%` }} />
+        </div>
+        <h2 className="text-lg font-medium text-indigo-800 mb-2">Question {currentIndex + 1} of {questions.length}</h2>
+        <p className="mb-4 text-indigo-700">{currentQuestion.question}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          {currentQuestion.options.map(opt => (
+            <button
+              key={opt}
+              onClick={() => handleSelect(opt)}
+              className={`text-left px-4 py-2 border rounded hover:bg-indigo-50 disabled:opacity-50 ${selected === opt ? 'border-indigo-600 bg-indigo-100' : 'border-gray-300'}`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+        <div className="text-right">
+          <button
+            onClick={handleNext}
+            disabled={!selected}
+            className="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {currentIndex + 1 === questions.length ? 'Submit' : 'Next'}
+          </button>
+        </div>
       </motion.div>
     </div>
   );
