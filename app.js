@@ -26,20 +26,21 @@ const QUESTIONS = [
 ];
 
 const PASS_MARK = 75;
-const EXAM_TIME_SECONDS = 60 * 2; // 2 minutes for demo
+const EXAM_TIME_SECONDS = 60 * 5; // 5 minutes for demo
 
-function App() {
+export default function App() {
   const [name, setName] = useState("");
   const [started, setStarted] = useState(false);
+  const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState(Array(QUESTIONS.length).fill(null));
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(EXAM_TIME_SECONDS);
 
-  // Timer effect
+  // Timer logic
   useEffect(() => {
     if (!started || submitted) return;
-    if (timeLeft === 0) {
+    if (timeLeft <= 0) {
       handleSubmit();
       return;
     }
@@ -47,144 +48,157 @@ function App() {
     return () => clearInterval(timer);
   }, [started, timeLeft, submitted]);
 
-  const handleOptionChange = (qIdx, oIdx) => {
-    const newAnswers = [...answers];
-    newAnswers[qIdx] = oIdx;
-    setAnswers(newAnswers);
+  const handleOptionChange = (idx) => {
+    const updated = [...answers];
+    updated[currentQ] = idx;
+    setAnswers(updated);
+  };
+
+  const handleNext = () => {
+    if (currentQ < QUESTIONS.length - 1) {
+      setCurrentQ(currentQ + 1);
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentQ > 0) setCurrentQ(currentQ - 1);
   };
 
   const handleSubmit = () => {
-    let correct = 0;
-    answers.forEach((a, i) => {
-      if (a === QUESTIONS[i].answer) correct++;
+    let correctCount = 0;
+    answers.forEach((ans, idx) => {
+      if (ans === QUESTIONS[idx].answer) correctCount++;
     });
-    setScore(correct);
+    setScore(correctCount);
     setSubmitted(true);
     setStarted(false);
     setTimeLeft(0);
-    setTimeout(() => exportResults(correct), 1200);
+    setTimeout(() => exportResults(correctCount), 500);
   };
 
-  const exportResults = (correct) => {
-    const percentage = ((correct / QUESTIONS.length) * 100).toFixed(2);
-    const result = percentage >= PASS_MARK ? "PASS" : "FAIL";
-    const txt = `Name: ${name}
-Score: ${correct} / ${QUESTIONS.length}
-Percentage: ${percentage}%
-Result: ${result}
-Thank you for taking the exam!
-`;
-    // Export as TXT
-    const blob = new Blob([txt], { type: "text/plain" });
-    const link = document.createElement("a");
-    link.download = `${name}_exam_result.txt`;
+  const exportResults = (correctCount) => {
+    const percent = ((correctCount / QUESTIONS.length) * 100).toFixed(2);
+    const result = percent >= PASS_MARK ? "PASS" : "FAIL";
+    const textContent = `Name: ${name}\nScore: ${correctCount} / ${QUESTIONS.length}\nPercentage: ${percent}%\nResult: ${result}`;
+    // TXT download
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
+    link.download = `${name}_result.txt`;
     link.click();
 
-    // Export as PDF
+    // PDF download
     const doc = new jsPDF();
-    doc.text("Exam Results", 10, 10);
-    doc.text(`Name: ${name}`, 10, 20);
-    doc.text(`Score: ${correct} / ${QUESTIONS.length}`, 10, 30);
-    doc.text(`Percentage: ${percentage}%`, 10, 40);
-    doc.text(`Result: ${result}`, 10, 50);
-    doc.save(`${name}_exam_result.pdf`);
+    doc.setFontSize(16);
+    doc.setTextColor(76, 0, 153);
+    doc.text('Exam Results', 20, 20);
+    doc.setFontSize(12);
+    doc.text(`Name: ${name}`, 20, 40);
+    doc.text(`Score: ${correctCount} / ${QUESTIONS.length}`, 20, 50);
+    doc.text(`Percentage: ${percent}%`, 20, 60);
+    doc.text(`Result: ${result}`, 20, 70);
+    doc.save(`${name}_result.pdf`);
   };
 
+  // Initial Name Entry
   if (!started && !submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-purpleMain">
-        <div className="bg-white rounded-2xl shadow-2xl p-12 w-full max-w-md">
-          <h1 className="text-3xl font-bold text-purpleMain mb-6">Online Exam</h1>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 to-purple-800">
+        <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full">
+          <h1 className="text-3xl font-extrabold mb-6 text-center text-purple-900">Start Exam</h1>
           <input
-            className="border-2 border-purpleMain rounded-lg px-4 py-2 w-full mb-4 focus:outline-none focus:border-purple-500"
-            placeholder="Enter your name"
+            type="text"
+            placeholder="Your Name"
             value={name}
             onChange={e => setName(e.target.value)}
+            className="w-full border-2 border-purple-900 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-purple-900 placeholder-purple-900 text-purple-900 bg-white"
           />
           <button
-            className="bg-purpleMain text-white font-semibold px-8 py-3 rounded-xl w-full hover:bg-purple-700 transition"
             disabled={!name}
             onClick={() => { setStarted(true); setTimeLeft(EXAM_TIME_SECONDS); }}
-          >
-            Start Exam
-          </button>
+            className="w-full bg-purple-900 hover:bg-purple-950 text-white font-semibold py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-700 disabled:opacity-50 transition"
+          >Begin</button>
         </div>
       </div>
     );
   }
 
+  // Question Pages
   if (started && !submitted) {
+    const q = QUESTIONS[currentQ];
+    const progress = ((currentQ + 1) / QUESTIONS.length) * 100;
     return (
-      <div className="min-h-screen bg-purpleLight flex flex-col items-center py-10">
-        <div className="w-full max-w-2xl bg-white shadow-xl rounded-2xl p-8">
-          <div className="flex justify-between items-center mb-6">
-            <div className="text-xl font-bold text-purpleMain">Welcome, {name}</div>
-            <div className="font-mono text-lg text-purpleMain">
-              Time Left: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
+      <div className="min-h-screen bg-purple-900 flex flex-col items-center py-8">
+        <div className="w-full max-w-xl bg-purple-800 rounded-3xl shadow-2xl p-6">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-xl font-bold text-white">{name}</span>
+            <span className="font-mono text-lg text-white">
+              {Math.floor(timeLeft/60)}:{String(timeLeft%60).padStart(2,'0')}
+            </span>
+          </div>
+          {/* Progress Bar */}
+          <div className="w-full bg-purple-500 rounded-full h-3 mb-6">
+            <div
+              className="bg-purple-200 h-3 rounded-full transition-all"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="border-2 border-purple-200 rounded-2xl p-6 mb-6 bg-purple-200">
+            <div className="text-lg font-semibold text-purple-900 mb-4">Question {currentQ+1} of {QUESTIONS.length}</div>
+            <div className="mb-4 text-base text-purple-900">{q.question}</div>
+            <div className="flex flex-col space-y-3">
+              {q.options.map((opt, idx) => (
+                <label
+                  key={idx}
+                  className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition ${answers[currentQ] === idx ? 'border-green-500 bg-green-500' : 'border-transparent'} focus-within:ring-2 focus-within:ring-green-400`}
+                >
+                  <input
+                    type="radio"
+                    name={`q${currentQ}`}
+                    checked={answers[currentQ] === idx}
+                    onChange={() => handleOptionChange(idx)}
+                    className="accent-green-500 focus:ring-green-400 mr-3"
+                  />
+                  <span className="text-purple-900">{opt}</span>
+                </label>
+              ))}
             </div>
           </div>
-          <form onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
-            {QUESTIONS.map((q, i) => (
-              <div key={i} className="mb-6">
-                <div className="font-semibold mb-2">{i + 1}. {q.question}</div>
-                <div className="flex flex-col gap-2">
-                  {q.options.map((opt, j) => (
-                    <label key={j} className="flex items-center">
-                      <input
-                        type="radio"
-                        name={`q${i}`}
-                        checked={answers[i] === j}
-                        onChange={() => handleOptionChange(i, j)}
-                        className="accent-purpleMain mr-2"
-                        required
-                      />
-                      <span>{opt}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div className="flex justify-between">
             <button
-              type="submit"
-              className="bg-purpleMain text-white px-8 py-2 rounded-xl font-bold w-full hover:bg-purple-800 transition"
-            >
-              Submit
-            </button>
-          </form>
+              onClick={handlePrev}
+              disabled={currentQ === 0}
+              className="px-4 py-2 bg-white text-purple-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-700 disabled:opacity-50 transition"
+            >Previous</button>
+            <button
+              onClick={handleNext}
+              disabled={answers[currentQ] === null}
+              className="px-4 py-2 bg-white text-purple-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-700 disabled:opacity-50 transition"
+            >{currentQ < QUESTIONS.length - 1 ? 'Next' : 'Submit'}</button>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Show results
-  const percentage = ((score / QUESTIONS.length) * 100).toFixed(2);
-  const passed = percentage >= PASS_MARK;
-
+  // Results Screen
+  const percentScore = ((score / QUESTIONS.length) * 100).toFixed(2);
+  const pass = percentScore >= PASS_MARK;
   return (
-    <div className="min-h-screen flex items-center justify-center bg-purpleMain">
-      <div className="bg-white rounded-2xl shadow-2xl p-12 w-full max-w-md text-center">
-        <h2 className={`text-4xl font-bold mb-6 ${passed ? "text-green-600" : "text-red-600"}`}>
-          {passed ? "Congratulations!" : "Exam Completed"}
-        </h2>
-        <div className="text-xl mb-4">Name: <span className="font-semibold">{name}</span></div>
-        <div className="text-lg mb-2">Score: {score} / {QUESTIONS.length}</div>
-        <div className="text-lg mb-2">Percentage: {percentage}%</div>
-        <div className={`text-lg mb-8 font-bold ${passed ? "text-green-600" : "text-red-600"}`}>
-          {passed ? "PASS" : "FAIL"}
-        </div>
-        <div className="text-purpleMain font-semibold mb-2">
-          Results have been automatically downloaded (TXT & PDF)
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 to-purple-800 text-white">
+      <div className="bg-purple-200 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center">
+        <h2 className={`text-3xl font-bold mb-4 ${pass ? 'text-green-200' : 'text-red-200'}`}>{pass ? 'Passed!' : 'Completed'}</h2>
+        <p className="mb-2 text-lg text-purple-900">Name: <span className="font-semibold text-purple-900">{name}</span></p>
+        <p className="mb-2 text-lg text-purple-900">Score: {score} / {QUESTIONS.length}</p>
+        <p className="mb-4 text-lg text-purple-900">Percentage: {percentScore}%</p>
+        <p className="mb-6 font-semibold text-purple-900">Results downloaded (TXT & PDF)</p>
         <button
-          className="mt-6 bg-purpleMain text-white px-6 py-2 rounded-xl font-bold"
-          onClick={() => { setName(""); setAnswers(Array(QUESTIONS.length).fill(null)); setSubmitted(false); setScore(0); }}
-        >
-          Try Again
-        </button>
+          onClick={() => window.location.reload()}
+          className="px-6 py-2 bg-white text-purple-900 rounded-lg focus:outline-none focus:ring-4 focus:ring-purple-700 transition"
+        >Retake Exam</button>
       </div>
     </div>
   );
 }
-
-export default App;
