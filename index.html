@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sigma → Windows Defender (MDE) KQL Converter</title>
+    <style>
+        textarea { width: 99%; font-family: monospace; }
+        .error { color: #d32f2f; }
+        .mapping { margin-bottom: 1em; }
+    </style>
+</head>
+<body>
+    <h2>Sigma to Microsoft Defender for Endpoint (KQL) Converter</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="post">
+        <label for="sigma"><b>Paste Sigma YAML rule here:</b></label><br>
+        <textarea name="sigma" rows="14" required>{{ sigma|default('') }}</textarea><br><br>
+
+        <b>Field Mapping (Sigma → Defender column):</b><br>
+        <div class="mapping">
+        {% for s_field, d_field in mapping.items() %}
+            {{ s_field }} → <input type="text" name="map_{{s_field}}" value="{{d_field}}" size="20">
+            <br>
+        {% endfor %}
+        <i>Edit mappings above if needed, e.g. 'Image' → 'FileName'.</i>
+        </div>
+
+        <button type="submit">Convert to KQL</button>
+    </form>
+
+    {% if kql %}
+        <h3>Converted KQL:</h3>
+        <form action="{{ url_for('download_kql') }}" method="post">
+            <textarea name="kql" rows="12" readonly>{{ kql }}</textarea><br>
+            <button type="submit">Download KQL</button>
+        </form>
+    {% endif %}
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+</body>
+</html>
